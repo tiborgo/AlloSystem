@@ -84,6 +84,15 @@ elif binary_exists "port"; then
 
 	build_and_install_assimp
 
+elif binary_exists "fink"; then
+	echo 'Found Fink'
+	sudo apt-get update
+	sudo apt-get install cmake
+	sudo apt-get install portaudio libsndfile1-dev
+	sudo apt-get install glew
+	sudo apt-get install
+	sudo apt-get install freetype219
+
 elif uname | grep "MINGW"; then
 	echo 'Found MinGW / MSYS'
 	if ! binary_exists "wget"; then

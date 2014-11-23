@@ -29,8 +29,14 @@ elif binary_exists "brew"; then
 elif binary_exists "port"; then
 	echo 'Found MacPorts'
 	sudo port selfupdate
-	sudo port install pkgconfig 
+	sudo port install pkgconfig
 	sudo port install opencv +openni
+
+elif binary_exists "fink"; then
+	echo 'Found Fink'
+	sudo apt-get update
+	sudo apt-get install pkgconfig
+	fink install opencv2.4-dev
 
 # Windows / MinGW
 elif uname | grep "MINGW"; then
