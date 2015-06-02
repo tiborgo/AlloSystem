@@ -259,5 +259,9 @@ endif(BUILD_EXAMPLES)
 add_subdirectory(unitTests)
 
 # installation
-install(FILES ${ALLOCORE_HEADERS} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/allocore)
+# keep directory structure of header files
+foreach (header ${ALLOCORE_HEADERS})
+    get_filename_component(dir ${header} DIRECTORY)
+    install(FILES ${header} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${dir})
+endforeach()
 install(TARGETS ${ALLOCORE_LIB} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
