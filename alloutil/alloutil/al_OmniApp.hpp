@@ -23,7 +23,7 @@ class OmniApp : public Window,
                 public FPS,
                 public OmniStereo::Drawable {
  public:
-  OmniApp(std::string name = "omniapp", bool slave = false);
+  OmniApp(std::string name = "omniapp", bool slave = false,  int resolution = 1024);
   virtual ~OmniApp();
 
   void start();
@@ -117,8 +117,9 @@ class OmniApp : public Window,
 
 // INLINE IMPLEMENTATION //
 
-inline OmniApp::OmniApp(std::string name, bool slave)
-    : mNavControl(mNav),
+inline OmniApp::OmniApp(std::string name, bool slave, int resolution)
+    : mOmni(resolution),
+      mNavControl(mNav),
       mOSCRecv(PORT_FROM_DEVICE_SERVER),
       mOSCSend(PORT_TO_DEVICE_SERVER, DEVICE_SERVER_IP_ADDRESS),
       bSlave(slave) {
