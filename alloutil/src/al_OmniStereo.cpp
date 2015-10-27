@@ -111,27 +111,57 @@ static const char * fCube = AL_STRINGIFY(
 	uniform sampler2D   pixelMap;
 	uniform sampler2D   alphaMap;
 	uniform samplerCube cubeMap;
-    uniform vec3        forCenter;
+    uniform vec3        forRotation;
+    uniform float       forAngle;
+    uniform vec3        rotation;
 
 	varying vec2 T;
+    
+    // From http://www.neilmendoza.com/glsl-rotation-about-an-arbitrary-axis/
+    mat4 rotationMatrix(vec3 axis, float angle)
+    {
+        axis = normalize(axis);
+        float s = sin(angle);
+        float c = cos(angle);
+        float oc = 1.0 - c;
+    
+        return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
+                    oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
+                    oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
+                    0.0,                                0.0,                                0.0,                                1.0);
+    }
+                                         
+    mat4 rotationMatrix(vec3 eulerAngles)
+    {
+        vec3 s = sin(eulerAngles);
+        vec3 c = cos(eulerAngles);
+
+        return mat4(c.x * c.y,  c.x * s.y * s.z - s.x * c.z,  c.x * s.y * c.z + s.x * s.z,  0.0,
+                    s.x * c.y,  s.x * s.y * s.z + c.x * c.z,  s.x * s.y * c.z - c.x * s.z,  0.0,
+                    -s.y,       c.y * s.z,                    c.y * c.z,                    0.0,
+                    0.0,        0.0,                          0.0,                          1.0);
+    }
 
 	void main (void){
 		// ray location (calibration space):
 		vec3 v = normalize(texture2D(pixelMap, T).rgb);
 
         // points to the center of the visible hemisphere
-        vec3 normFORCenter = normalize(forCenter);
+        
+        vec3 normFORCenter = normalize((vec4(1.0, 0.0, 0.0, 0.0) * rotationMatrix(forRotation)).xyz);
         
         float angle = acos(dot(normFORCenter, v));
         
         vec3 rgb;
-        if (angle > M_PI/2.0)
+        if (angle > forAngle)
         {
             // pixel is outside of visible hemisphere and should be black
             rgb = vec3(0.0, 0.0, 0.0);
         }
         else
         {
+            // rotate vector accordingly
+            v = (vec4(v, 1.0) * rotationMatrix(rotation)).xyz;
             // index into cubemap:
             rgb = textureCube(cubeMap, v).rgb * texture2D(alphaMap, T).rgb;
         }
@@ -578,7 +608,9 @@ OmniStereo::OmniStereo(unsigned resolution, bool useMipMaps)
 	mAnaglyphMode(RED_CYAN),
 	mMipmap(useMipMaps),
 	mFullScreen(false),
-    mFORCenter(0, 0, 0)
+    mFORRotation(0, 0, 0),
+    mFORAngle(M_PI*2.0),
+    mRotation(0, 0, 0)
 {
 	mFbo = mRbo = 0;
 	mTex[0] = mTex[1] = 0;
@@ -608,8 +640,18 @@ OmniStereo& OmniStereo::resolution(unsigned r) {
 
 }
 
-OmniStereo& OmniStereo::forCenter(const Vec<3, float>& forCenter) {
-    mFORCenter = forCenter;
+OmniStereo& OmniStereo::forRotation(const Vec3f& forRotation) {
+    mFORRotation = forRotation;
+    return *this;
+}
+
+OmniStereo& OmniStereo::forAngle(float forAngle) {
+    mFORAngle = forAngle;
+    return *this;
+}
+
+OmniStereo& OmniStereo::rotation(const Vec3f& rotation) {
+    mRotation = rotation;
     return *this;
 }
 
@@ -1072,7 +1114,9 @@ void OmniStereo::draw(const Lens& lens, const Pose& pose, const Viewport& vp) {
 		gl.error("OmniStereo cube draw begin");
 
 		mCubeProgram.begin();
-        mCubeProgram.uniform("forCenter", mFORCenter);
+        mCubeProgram.uniform("forRotation",   mFORRotation);
+        mCubeProgram.uniform("forAngle",      mFORAngle);
+        mCubeProgram.uniform("rotation",      mRotation);
         
 		glActiveTexture(GL_TEXTURE0);
 		glEnable(GL_TEXTURE_CUBE_MAP);

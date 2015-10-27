@@ -194,8 +194,14 @@ class OmniStereo {
   OmniStereo& resolution(unsigned resolution);
   unsigned resolution() { return mResolution; }
     
-  OmniStereo& forCenter(const Vec<3, float>& forCenter);
-  Vec<3, float> forCenter() { return mFORCenter; };
+  OmniStereo& forRotation(const Vec3f& forRotation);
+  Vec3f forRotation() { return mFORRotation; };
+
+  OmniStereo& forAngle(float forAngle);
+  float forAngle() { return mFORAngle; };
+    
+  OmniStereo& rotation(const Vec3f& rotation);
+  Vec3f rotation() { return mRotation; }
 
   // configure the projections according to files
   OmniStereo& configure(std::string configpath,
@@ -324,7 +330,9 @@ class OmniStereo {
   int mFace;
   float mSphereRadius; // The radius of the sphere in OpenGL units.
   float mEyeParallax, mNear, mFar;
-  Vec<3, float> mFORCenter;
+  Vec3f mFORRotation;
+  float mFORAngle;
+  Vec3f mRotation;
 
   unsigned mResolution;
   unsigned mNumProjections;
