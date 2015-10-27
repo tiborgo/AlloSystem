@@ -105,9 +105,13 @@ static const char * vGeneric = AL_STRINGIFY(
 
 #pragma mark Cube GLSL
 static const char * fCube = AL_STRINGIFY(
-	uniform sampler2D pixelMap;
-	uniform sampler2D alphaMap;
+                                         
+    const float M_PI = 3.141592653589793238462643383279;
+                                         
+	uniform sampler2D   pixelMap;
+	uniform sampler2D   alphaMap;
 	uniform samplerCube cubeMap;
+    uniform vec3        forCenter;
 
 	varying vec2 T;
 
@@ -115,8 +119,22 @@ static const char * fCube = AL_STRINGIFY(
 		// ray location (calibration space):
 		vec3 v = normalize(texture2D(pixelMap, T).rgb);
 
-		// index into cubemap:
-		vec3 rgb = textureCube(cubeMap, v).rgb * texture2D(alphaMap, T).rgb;
+        // points to the center of the visible hemisphere
+        vec3 normFORCenter = normalize(forCenter);
+        
+        float angle = acos(dot(normFORCenter, v));
+        
+        vec3 rgb;
+        if (angle > M_PI/2.0)
+        {
+            // pixel is outside of visible hemisphere and should be black
+            rgb = vec3(0.0, 0.0, 0.0);
+        }
+        else
+        {
+            // index into cubemap:
+            rgb = textureCube(cubeMap, v).rgb * texture2D(alphaMap, T).rgb;
+        }
 
 		gl_FragColor = vec4(rgb, 1.);
 	}
@@ -559,7 +577,8 @@ OmniStereo::OmniStereo(unsigned resolution, bool useMipMaps)
 	mStereo(0),
 	mAnaglyphMode(RED_CYAN),
 	mMipmap(useMipMaps),
-	mFullScreen(false)
+	mFullScreen(false),
+    mFORCenter(0, 0, 0)
 {
 	mFbo = mRbo = 0;
 	mTex[0] = mTex[1] = 0;
@@ -587,6 +606,11 @@ OmniStereo& OmniStereo::resolution(unsigned r) {
 	mTex[0] = mTex[1] = 0;
 	return *this;
 
+}
+
+OmniStereo& OmniStereo::forCenter(const Vec<3, float>& forCenter) {
+    mFORCenter = forCenter;
+    return *this;
 }
 
 OmniStereo& OmniStereo::configure(WarpMode wm, float a, float f) {
@@ -1048,6 +1072,8 @@ void OmniStereo::draw(const Lens& lens, const Pose& pose, const Viewport& vp) {
 		gl.error("OmniStereo cube draw begin");
 
 		mCubeProgram.begin();
+        mCubeProgram.uniform("forCenter", mFORCenter);
+        
 		glActiveTexture(GL_TEXTURE0);
 		glEnable(GL_TEXTURE_CUBE_MAP);
 

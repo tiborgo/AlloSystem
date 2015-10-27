@@ -1,5 +1,6 @@
 build/
 examples/allo*
+CMakeBuilds/
 
 CMakeCache.txt
 CMakeFiles

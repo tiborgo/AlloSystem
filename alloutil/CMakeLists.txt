@@ -11,6 +11,35 @@ set(ALLOUTIL_SRC
   src/al_RayStereo.cpp
   )
 
+list(APPEND ALLOUTIL_HEADERS
+  alloutil/al_AlloSphere.hpp
+  alloutil/al_Field3D.hpp
+  alloutil/al_OmniApp.hpp
+  alloutil/al_RayStereo.hpp
+  alloutil/al_VoxelStack.hpp
+  alloutil/al_AlloSphereAudioSpatializer.hpp
+  alloutil/al_FileWatcher.hpp
+  alloutil/al_OmniStereo.hpp
+  alloutil/al_ResourceManager.hpp
+  alloutil/al_WarpBlend.hpp
+  alloutil/al_AlloSphereSpeakerLayout.hpp
+  alloutil/al_FrameBufferGL.hpp
+  alloutil/al_OmniStereoGraphicsRenderer.hpp
+  alloutil/al_ShotList.hpp
+  alloutil/al_AudioRenderer.hpp
+  alloutil/al_InterfaceServerClient.hpp
+  alloutil/al_OverlayTextGL.hpp
+  alloutil/al_Simulator.hpp
+  alloutil/al_CubeMapFBO.hpp
+  alloutil/al_Lua.hpp
+  alloutil/al_RayApp.hpp
+  alloutil/al_TextureGL.hpp
+  alloutil/al_FPS.hpp
+  alloutil/al_Navigator.hpp
+  alloutil/al_RayCastingGraphicsRenderer.hpp
+  alloutil/al_VCR.hpp
+  )
+
 # Dependencies ------------------------------
 find_package(LuaJIT)
 
@@ -51,7 +80,7 @@ get_target_property(ALLOCORE_LINK_LIBRARIES allocore${DEBUG_SUFFIX} ALLOCORE_LIN
 # Build library ----------------------------------
 
 set(ALLOUTIL_LIB "alloutil${DEBUG_SUFFIX}")
-add_library(${ALLOUTIL_LIB} ${ALLOUTIL_SRC})
+add_library(${ALLOUTIL_LIB} ${ALLOUTIL_SRC} ${ALLOUTIL_HEADERS})
 
 set(ALLOUTIL_LINK_LIBRARIES ${LUA_LIBRARIES} ${Jsoncpp_LIBRARIES} ${ALLOCORE_LIBRARY})
 set(ALLOUTIL_DIRS ${CMAKE_CURRENT_SOURCE_DIR} ${LUA_INCLUDE_DIR} ${Jsoncpp_INCLUDE_DIRS} ${ALLOCORE_DEP_INCLUDE_DIRS})
