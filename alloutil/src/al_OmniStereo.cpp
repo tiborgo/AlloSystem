@@ -112,7 +112,7 @@ static const char * fCube = AL_STRINGIFY(
 	uniform sampler2D   alphaMap;
 	uniform samplerCube cubeMap;
     uniform vec3        forRotation;
-    uniform float       forAngle;
+    uniform vec2        forAngle;
     uniform vec3        rotation;
 
 	varying vec2 T;
@@ -145,15 +145,22 @@ static const char * fCube = AL_STRINGIFY(
 	void main (void){
 		// ray location (calibration space):
 		vec3 v = normalize(texture2D(pixelMap, T).rgb);
-
-        // points to the center of the visible hemisphere
         
-        vec3 normFORCenter = normalize((vec4(1.0, 0.0, 0.0, 0.0) * rotationMatrix(forRotation)).xyz);
+        vec3 forX = normalize((vec4(1.0, 0.0, 0.0, 0.0) * rotationMatrix(forRotation)).xyz);
+        vec3 forY = normalize((vec4(0.0, 1.0, 0.0, 0.0) * rotationMatrix(forRotation)).xyz);
+        vec3 forZ = normalize((vec4(0.0, 0.0, 1.0, 0.0) * rotationMatrix(forRotation)).xyz);
         
-        float angle = acos(dot(normFORCenter, v));
+        vec2 xyspan = forAngle * 0.5;
+        vec3 warpX = normalize(v - forY * dot(v, forY));
+        
+        vec2 xyangle = vec2(acos(dot(warpX, forZ)),
+                            acos(dot(v, warpX)));
+        
+        float angle = acos(dot(forZ, v));
         
         vec3 rgb;
-        if (angle > forAngle)
+        if ((xyspan.y == 0.0 && angle > xyspan.x) ||
+            (xyspan.y >  0.0 && (abs(xyangle.x) > abs(xyspan.x) || abs(xyangle.y) > abs(xyspan.y))))
         {
             // pixel is outside of visible hemisphere and should be black
             rgb = vec3(0.0, 0.0, 0.0);
@@ -164,6 +171,7 @@ static const char * fCube = AL_STRINGIFY(
             v = (vec4(v, 1.0) * rotationMatrix(rotation)).xyz;
             // index into cubemap:
             rgb = textureCube(cubeMap, v).rgb * texture2D(alphaMap, T).rgb;
+                rgb = vec3(1.0, 0.0, 0.0) * texture2D(alphaMap, T).rgb;
         }
 
 		gl_FragColor = vec4(rgb, 1.);
@@ -609,7 +617,7 @@ OmniStereo::OmniStereo(unsigned resolution, bool useMipMaps)
 	mMipmap(useMipMaps),
 	mFullScreen(false),
     mFORRotation(0, 0, 0),
-    mFORAngle(M_PI*2.0),
+    mFORAngle(M_PI*2.0, M_PI*2.0),
     mRotation(0, 0, 0)
 {
 	mFbo = mRbo = 0;
@@ -645,7 +653,7 @@ OmniStereo& OmniStereo::forRotation(const Vec3f& forRotation) {
     return *this;
 }
 
-OmniStereo& OmniStereo::forAngle(float forAngle) {
+OmniStereo& OmniStereo::forAngle(const Vec2f& forAngle) {
     mFORAngle = forAngle;
     return *this;
 }
@@ -1114,9 +1122,9 @@ void OmniStereo::draw(const Lens& lens, const Pose& pose, const Viewport& vp) {
 		gl.error("OmniStereo cube draw begin");
 
 		mCubeProgram.begin();
-        mCubeProgram.uniform("forRotation",   mFORRotation);
-        mCubeProgram.uniform("forAngle",      mFORAngle);
-        mCubeProgram.uniform("rotation",      mRotation);
+        mCubeProgram.uniform("forRotation", mFORRotation);
+        mCubeProgram.uniform("forAngle",    mFORAngle);
+        mCubeProgram.uniform("rotation",    mRotation);
         
 		glActiveTexture(GL_TEXTURE0);
 		glEnable(GL_TEXTURE_CUBE_MAP);
