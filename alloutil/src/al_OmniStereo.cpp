@@ -112,8 +112,8 @@ static const char * fCube = AL_STRINGIFY(
 	uniform sampler2D   alphaMap;
 	uniform samplerCube cubeMap;
     uniform vec3        forRotation;
-    uniform vec2        forAngle;
     uniform vec3        rotation;
+    uniform vec2        forAngle;
 
 	varying vec2 T;
     
@@ -171,7 +171,7 @@ static const char * fCube = AL_STRINGIFY(
             v = (vec4(v, 1.0) * rotationMatrix(rotation)).xyz;
             // index into cubemap:
             rgb = textureCube(cubeMap, v).rgb * texture2D(alphaMap, T).rgb;
-                rgb = vec3(1.0, 0.0, 0.0) * texture2D(alphaMap, T).rgb;
+             //   rgb = vec3(1.0, 0.0, 0.0) * texture2D(alphaMap, T).rgb;
         }
 
 		gl_FragColor = vec4(rgb, 1.);
